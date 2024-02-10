@@ -4,23 +4,35 @@ import os
 from googleapiclient.discovery import build
 
 
-def printj(dict_to_print: dict) -> None:
-    """Выводит словарь в json-подобном удобном формате с отступами"""
-    print(json.dumps(dict_to_print, indent=2, ensure_ascii=False))
-
-
 class Channel:
     """Класс для ютуб-канала"""
+    api_key: str = os.getenv('YT_API_KEY')
+    youtube = build('youtube', 'v3', developerKey=api_key)
 
     def __init__(self, channel_id: str) -> None:
         """Экземпляр инициализируется id канала. Дальше все данные будут подтягиваться по API."""
-        self.channel_id = channel_id
+        self.__channel_id = channel_id
+        self.channel = self.youtube.channels().list(id=self.__channel_id, part='snippet,statistics').execute()
+        self.title: str = self.channel['items'][0]['snippet']['title']
+        self.description: str = self.channel['items'][0]['snippet']['description']
+        self.url = self.channel['items'][0]['snippet']['thumbnails']['default']['url']
+        self.subscribers: int = self.channel['items'][-1]['statistics']['subscriberCount']
+        self.video_count = self.channel['items'][-1]['statistics']['videoCount']
+        self.view_count = self.channel['items'][-1]['statistics']['viewCount']
 
     def print_info(self) -> None:
         """Выводит в консоль информацию о канале."""
-        api_key: str = os.getenv('YT_API_KEY')
+        print(json.dumps(self.channel, indent=2, ensure_ascii=False))
 
-        youtube = build('youtube', 'v3', developerKey=api_key)
+    @classmethod
+    def get_service(cls):
+        """Возвращает объект для работы с YouTube API"""
+        return build('youtube', 'v3', developerKey=cls.api_key)
 
-        channel = youtube.channels().list(id=self.channel_id, part='snippet,statistics').execute()
-        printj(channel)
+    def to_json(self, file_name: str) -> None:
+        """Сохраняет в файл значения атрибутов экземпляра Channel"""
+        for_json: dict = {'title': self.title, 'description': self.description,
+                          'url': self.url, 'subscribers': self.subscribers,
+                          'video_count': self.video_count, 'view_count': self.view_count}
+        with open(file_name, 'w') as file:
+            json.dump(for_json, file)
