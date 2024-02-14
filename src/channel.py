@@ -15,10 +15,32 @@ class Channel:
         self.__channel = self.youtube.channels().list(id=self.__channel_id, part='snippet,statistics').execute()
         self.title: str = self.__channel['items'][0]['snippet']['title']
         self.description: str = self.__channel['items'][0]['snippet']['description']
-        self.url = self.__channel['items'][0]['snippet']['thumbnails']['default']['url']
+        self.url = 'https://www.youtube.com/channel/' + self.__channel_id
         self.subscribers: int = self.__channel['items'][-1]['statistics']['subscriberCount']
         self.video_count = self.__channel['items'][-1]['statistics']['videoCount']
         self.view_count = self.__channel['items'][-1]['statistics']['viewCount']
+
+    def __str__(self) -> str:
+        """Возвращает название и ссылку на канал по шаблону <название_канала> (<ссылка_на_канал>)"""
+        return f'{self.title} ({self.url})'
+
+    def __add__(self, other):
+        return int(self.subscribers) + int(other.subscribers)
+
+    def __sub__(self, other):
+        return int(self.subscribers) - int(other.subscribers)
+
+    def __gt__(self, other):
+        return int(self.subscribers) > int(other.subscribers)
+
+    def __ge__(self, other):
+        return int(self.subscribers) >= int(other.subscribers)
+
+    def __lt__(self, other):
+        return int(self.subscribers) < int(other.subscribers)
+
+    def __le__(self, other):
+        return int(self.subscribers) <= int(other.subscribers)
 
     @property
     def channel_id(self) -> str:
